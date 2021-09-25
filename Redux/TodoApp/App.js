@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import ListTask from './src/ListTask';
 
-import { createStore } from 'redux'
+import { createStore, combineReducers, applyMiddleware } from 'redux';
 
 // state : Luu tru tat ca cac bien trong ung dung
 
-let appState = { number: 1,histories:[1] }
+let appState = { number: 1, histories: [1], error: '' }
 
 
 // action : Su kien do nguoi dung tuong tac voi ui tao ra
@@ -25,14 +25,14 @@ const sub = {
 // reducer : tong hop dua tren state va action de xu ly
 // logic chinh
 
-const numberReducer = (state, action) => {
+const numberReducer = (state = appState, action) => {
   switch (action.type) {
     case 'ADD':
       /** immutable state */
       const newValueADD = state.number + action.value;
       state = {
         ...state,
-        histories:[...state.histories,newValueADD],
+        histories: [...state.histories, newValueADD],
         number: newValueADD
       }
 
@@ -43,7 +43,7 @@ const numberReducer = (state, action) => {
       const newValueSUB = state.number - action.value;
       state = {
         ...state,
-        histories:[...state.histories,newValueSUB],
+        histories: [...state.histories, newValueSUB],
         number: newValueSUB
       }
       //state.number -= action.value;
@@ -52,18 +52,54 @@ const numberReducer = (state, action) => {
   return state;
 }
 
+const errorReducer = (state = appState, action) => {
+  switch (action.type) {
+    case 'LESS_THAN_ZERO':
+      state = {
+        ...state,
+        error: 'number can\'t be less than zero'
+      }
+      break;
+  }
+
+  return state;
+}
+// middleware (kiem tra action co duoc chay jay khong)
+
+const logger = store => next => action => {
+  console.log('State', store.getState())
+  next(action)
+  console.log('State updated', store.getState())
+}
+const checkIsZero = store => next => action => {
+  const currentNumber = store.getState().number.number;
+  if (currentNumber === 0) {
+    next({ type: 'LESS_THAN_ZERO' })
+  } else {
+    next(action)
+  }
+  console.log('Current number ', currentNumber);
+}
+
 // store : mot diem duy nhat trong ung dung (quan ly cac bien cua tat ca cac component trong ung dung)
-const store = createStore(numberReducer, appState);
+const reducers = combineReducers({ number: numberReducer, err: errorReducer });
+const store = createStore(reducers, applyMiddleware(logger,checkIsZero));
 
 // Test
-store.subscribe(() => {
-  console.log('State updated', store.getState())
-})
+
+
+
+
+
+// store.subscribe(() => {
+//   console.log('State updated', store.getState())
+// })
 // 
 store.dispatch(add);
-store.dispatch(add);
-store.dispatch(add);
 store.dispatch(sub);
+store.dispatch(sub);
+store.dispatch(sub);
+//store.dispatch({ type: 'LESS_THAN_ZERO' });
 //
 
 
