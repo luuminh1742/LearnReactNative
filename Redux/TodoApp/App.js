@@ -4,7 +4,7 @@ import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import ListTask from './src/ListTask';
 
 import { createStore, combineReducers, applyMiddleware } from 'redux';
-
+import thunk from 'redux-thunk';
 // state : Luu tru tat ca cac bien trong ung dung
 
 let appState = { number: 1, histories: [1], error: '' }
@@ -83,26 +83,33 @@ const checkIsZero = store => next => action => {
 
 // store : mot diem duy nhat trong ung dung (quan ly cac bien cua tat ca cac component trong ung dung)
 const reducers = combineReducers({ number: numberReducer, err: errorReducer });
-const store = createStore(reducers, applyMiddleware(logger,checkIsZero));
+const store = createStore(reducers, applyMiddleware(thunk, logger, checkIsZero));
 
 // Test
 
+const addAfter3s = () => {
+  return dispatch => {
+    setInterval(() => {
+      dispatch(add);
+    }, 3000);
+  }
+}
 
-
-
+store.dispatch(addAfter3s());
 
 // store.subscribe(() => {
 //   console.log('State updated', store.getState())
 // })
 // 
-store.dispatch(add);
-store.dispatch(sub);
-store.dispatch(sub);
-store.dispatch(sub);
+// store.dispatch(add);
+// store.dispatch(sub);
+// store.dispatch(sub);
+// store.dispatch(sub);
+
+
+
 //store.dispatch({ type: 'LESS_THAN_ZERO' });
 //
-
-
 
 
 export default function App() {
